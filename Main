@@ -1,5 +1,168 @@
-Thought you would get the script that easily?
+-- SERVICES
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
 
-Join the discord and DM @Infinite60 to purchase >:D
+--------------------------------------------------
+-- SETTINGS
+--------------------------------------------------
+local REQUIRED_KEY = "sub2@FwerTrades"
 
-Discord : https://discord.gg/R9RSayA6
+--------------------------------------------------
+-- REMOTE EVENT (auto-create)
+--------------------------------------------------
+local event = ReplicatedStorage:FindFirstChild("ForceKillEvent")
+if not event then
+    event = Instance.new("RemoteEvent")
+    event.Name = "ForceKillEvent"
+    event.Parent = ReplicatedStorage
+end
+
+--------------------------------------------------
+-- SERVER SIDE: FORCE KILL
+--------------------------------------------------
+event.OnServerEvent:Connect(function(sender, target)
+    if target and target:IsA("Player") and target.Character then
+        local humanoid = target.Character:FindFirstChildOfClass("Humanoid")
+        if humanoid then
+            humanoid.Health = 0
+        end
+    end
+end)
+
+--------------------------------------------------
+-- CLIENT SIDE GUI
+--------------------------------------------------
+local function createGui(player)
+    local gui = Instance.new("ScreenGui")
+    gui.Name = "ForceKillGUI"
+    gui.ResetOnSpawn = false
+    gui.Parent = player:WaitForChild("PlayerGui")
+
+    ---------------- KEY FRAME ----------------
+    local KeyFrame = Instance.new("Frame", gui)
+    KeyFrame.Size = UDim2.new(0, 300, 0, 160)
+    KeyFrame.Position = UDim2.new(0.5, -150, 0.5, -80)
+    KeyFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    KeyFrame.BorderSizePixel = 0
+    Instance.new("UICorner", KeyFrame).CornerRadius = UDim.new(0, 12)
+
+    local Title = Instance.new("TextLabel", KeyFrame)
+    Title.Text = "Enter Key"
+    Title.Size = UDim2.new(1, 0, 0, 40)
+    Title.TextColor3 = Color3.new(1,1,1)
+    Title.Font = Enum.Font.GothamBold
+    Title.TextSize = 18
+    Title.BackgroundTransparency = 1
+
+    local Box = Instance.new("TextBox", KeyFrame)
+    Box.PlaceholderText = "Key here..."
+    Box.Size = UDim2.new(1, -40, 0, 40)
+    Box.Position = UDim2.new(0, 20, 0, 55)
+    Box.TextColor3 = Color3.new(1,1,1)
+    Box.BackgroundColor3 = Color3.fromRGB(45,45,45)
+    Box.ClearTextOnFocus = false
+    Box.Font = Enum.Font.Gotham
+    Box.TextSize = 14
+    Instance.new("UICorner", Box).CornerRadius = UDim.new(0, 8)
+
+    local Unlock = Instance.new("TextButton", KeyFrame)
+    Unlock.Text = "Unlock"
+    Unlock.Size = UDim2.new(0.5, 0, 0, 35)
+    Unlock.Position = UDim2.new(0.25, 0, 1, -45)
+    Unlock.BackgroundColor3 = Color3.fromRGB(70,170,70)
+    Unlock.TextColor3 = Color3.new(1,1,1)
+    Unlock.Font = Enum.Font.GothamBold
+    Unlock.TextSize = 14
+    Unlock.BorderSizePixel = 0
+    Instance.new("UICorner", Unlock).CornerRadius = UDim.new(0, 8)
+
+    ---------------- MAIN FRAME ----------------
+    local Main = Instance.new("Frame", gui)
+    Main.Visible = false
+    Main.Size = UDim2.new(0, 250, 0, 300)
+    Main.Position = UDim2.new(0, 10, 1, -310)
+    Main.BackgroundColor3 = Color3.fromRGB(25,25,25)
+    Main.BorderSizePixel = 0
+    Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 10)
+
+    local Scroll = Instance.new("ScrollingFrame", Main)
+    Scroll.Size = UDim2.new(1, -10, 1, -10)
+    Scroll.Position = UDim2.new(0, 5, 0, 5)
+    Scroll.CanvasSize = UDim2.new(0,0,0,0)
+    Scroll.ScrollBarThickness = 6
+    Scroll.BackgroundTransparency = 1
+
+    local layout = Instance.new("UIListLayout", Scroll)
+    layout.Padding = UDim.new(0, 8)
+
+    ---------------- PLAYER LIST ----------------
+    local function refresh()
+        Scroll:ClearAllChildren()
+        layout.Parent = Scroll
+
+        for _, plr in ipairs(Players:GetPlayers()) do
+            if plr ~= player then
+                local entry = Instance.new("Frame", Scroll)
+                entry.Size = UDim2.new(1, -5, 0, 50)
+                entry.BackgroundColor3 = Color3.fromRGB(40,40,40)
+                entry.BorderSizePixel = 0
+                Instance.new("UICorner", entry).CornerRadius = UDim.new(0, 6)
+
+                local name = Instance.new("TextLabel", entry)
+                name.Text = plr.Name
+                name.Size = UDim2.new(1, -110, 1, 0)
+                name.Position = UDim2.new(0, 10, 0, 0)
+                name.TextColor3 = Color3.new(1,1,1)
+                name.BackgroundTransparency = 1
+                name.Font = Enum.Font.GothamBold
+                name.TextSize = 14
+                name.TextXAlignment = Enum.TextXAlignment.Left
+
+                local btn = Instance.new("TextButton", entry)
+                btn.Text = "Force Kill"
+                btn.Size = UDim2.new(0, 90, 0, 30)
+                btn.Position = UDim2.new(1, -100, 0.5, -15)
+                btn.BackgroundColor3 = Color3.fromRGB(180,60,60)
+                btn.TextColor3 = Color3.new(1,1,1)
+                btn.Font = Enum.Font.GothamBold
+                btn.TextSize = 12
+                btn.BorderSizePixel = 0
+                Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 6)
+
+                btn.MouseButton1Click:Connect(function()
+                    event:FireServer(plr)
+                end)
+            end
+        end
+
+        task.wait()
+        Scroll.CanvasSize = UDim2.new(0,0,0,layout.AbsoluteContentSize.Y + 10)
+    end
+
+    Players.PlayerAdded:Connect(refresh)
+    Players.PlayerRemoving:Connect(refresh)
+
+    ---------------- KEY CHECK ----------------
+    Unlock.MouseButton1Click:Connect(function()
+        if Box.Text == REQUIRED_KEY then
+            KeyFrame:Destroy()
+            Main.Visible = true
+            refresh()
+        else
+            Unlock.Text = "Wrong Key"
+            Unlock.BackgroundColor3 = Color3.fromRGB(180,60,60)
+            task.wait(1)
+            Unlock.Text = "Unlock"
+            Unlock.BackgroundColor3 = Color3.fromRGB(70,170,70)
+        end
+    end)
+end
+
+--------------------------------------------------
+-- GIVE GUI TO PLAYERS
+--------------------------------------------------
+Players.PlayerAdded:Connect(function(player)
+    task.wait(1)
+    createGui(player)
+end)
